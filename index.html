@@ -1,30 +1,34 @@
 <!doctype html>
-<html>
+<html lang="es">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat Socket.IO UNA</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form { display: flex; gap: 4px; background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { border: 0; padding: 10px;}
-      form button { width: 10%; background: rgb(130, 224, 255);  border: none; padding: 10px; }
+      form button { width: 10%; min-width: 64px; background: rgb(130, 224, 255);  border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
       #messages { margin-bottom: 40px }
       #nombre, #m { display: inline-block;}
-      #m {width: 69%; margin-right: 4px;}
-      #nombre {width: 20%}
+      #m { flex: 1; min-width: 0; }
+      #nombre { width: 20%; min-width: 0; }
+      #messages li { overflow-wrap: anywhere; white-space: pre-wrap; }
+      #messages img, #messages video { display: block; max-width: 100%; max-height: 400px; margin-top: 8px; }
+      #messages iframe { display: block; width: 560px; max-width: 100%; height: 315px; border: 0; margin-top: 8px; }
     </style>
   </head>
   <body>
     <ul id="messages"></ul>
     <form action="">
-      <input id="nombre" autocomplete="off" placeholder="Username"/>
-      <input id="m" autocomplete="off" placeholder="Escriba un mensaje" /><button>Send</button>
+      <input id="nombre" autocomplete="off" placeholder="Username" aria-label="Nombre"/>
+      <input id="m" autocomplete="off" placeholder="Escriba un mensaje o pegue una URL" aria-label="Mensaje o URL" /><button>Send</button>
     </form>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
 
     var colorHexTxt = "";
@@ -40,14 +44,17 @@
         return color;
      }
 
-      $(function () {
+      document.addEventListener('DOMContentLoaded', function () {
         var socket = io();
+        var input = document.getElementById('m');
 
         // emite evento al servidor
         
-        $('form').submit(function(){
-            var nombreTxt = $('#nombre').val() || "Anomimo";
-            var mensajeTxt = $('#m').val();
+        document.querySelector('form').addEventListener('submit', function(event){
+            event.preventDefault();
+            var nombreTxt = document.getElementById('nombre').value || "Anonimo";
+            var mensajeTxt = input.value;
+            if (!mensajeTxt.trim()) return;
 
             if (colorHexTxt == "") {
                 colorHexTxt = getRandomColor();
@@ -55,16 +62,57 @@
 
             var jsonMsg = { nombre: nombreTxt, mensaje: mensajeTxt, color: colorHexTxt };
             socket.emit('Evento-Mensaje-Server', JSON.stringify(jsonMsg));
-            $('#m').val('');
-            return false;
+            input.value = '';
         });
-
-        // ... (resto del código) ...
 
         socket.on('Evento-Mensaje-Server', function(msg){
             var msgJson = JSON.parse(msg);
-            var mensajeDisplay = "<b style='color:"+ msgJson.color +"'>" + msgJson.nombre + "</b>: " + msgJson.mensaje;
-            $('#messages').append($('<li>').html(mensajeDisplay));
+            var item = document.createElement('li');
+            var name = document.createElement('b');
+            name.textContent = msgJson.nombre;
+            name.style.color = msgJson.color;
+            item.append(name, document.createTextNode(': '));
+
+            var media = msgJson.media;
+            if (media) {
+              // El servidor valida las URLs. Nunca insertar HTML del usuario.
+              var link = document.createElement('a');
+              link.href = media.url;
+              link.textContent = msgJson.mensaje;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              item.append(link);
+
+              var element;
+              if (media.tipo === 'imagen') {
+                element = document.createElement('img');
+                element.alt = 'Imagen compartida';
+              } else if (media.tipo === 'video') {
+                element = document.createElement('video');
+                element.controls = true;
+                element.preload = 'metadata';
+                element.textContent = 'Su navegador no puede reproducir este video. Abra el enlace.';
+              } else if (media.tipo === 'youtube') {
+                element = document.createElement('iframe');
+                element.title = 'Video de YouTube compartido';
+                element.allow = 'encrypted-media; picture-in-picture; fullscreen';
+                element.allowFullscreen = true;
+              }
+              if (element) {
+                element.src = media.url;
+                element.addEventListener('load', function () {
+                  window.scrollTo(0, document.body.scrollHeight);
+                });
+                element.addEventListener('error', function () {
+                  element.remove();
+                  item.append(document.createTextNode(' No se pudo cargar el contenido. Abra el enlace.'));
+                });
+                item.append(element);
+              }
+            } else {
+              item.append(document.createTextNode(msgJson.mensaje));
+            }
+            document.getElementById('messages').append(item);
             window.scrollTo(0, document.body.scrollHeight);
         });
 

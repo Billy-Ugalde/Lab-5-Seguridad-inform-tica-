@@ -21,91 +21,76 @@ module.exports = {
       // fin del try-catch block
     },
   
-    is_valid_url_image: function (url) {
-  
-      // inicializacion lazy
-      var isValid = false;
-      // expresion regular copiada de StackOverflow
-      var re = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png|jpeg|bmp)/i;
-  
-      // validacion Regex
+    // Solo URLs completas HTTP(S), sin credenciales ni caracteres de HTML.
+    parseMediaUrl: function (value) {
+      if (typeof value !== 'string') return null;
+      var text = value.trim();
+      if (!/^https?:\/\//i.test(text) || /[\s<>"']/.test(text)) return null;
       try {
-        isValid = re.test(phone);
+        var url = new URL(text);
+        if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
+        return url;
       } catch (e) {
-        console.log(e);
-      } finally {
-          return isValid;
+        return null;
       }
-      // fin del try-catch block
     },
-  
-    is_valid_yt_video: function (url) {
-  
-      // inicializacion lazy
-      var isValid = false;
-      // expresion regular copiada de StackOverflow
-      var re = /^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})?$/i;
-  
-      // validacion Regex
-      try {
-        isValid = re.test(phone);
-      } catch (e) {
-        console.log(e);
-      } finally {
-          return isValid;
-      }
-      // fin del try-catch block
-    },
-  
-    getYTVideoId: function(url){
-  
-      return url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)[1];
-    },
-  
-    getEmbeddedCode: function (url){
-      var id = this.getYTVideoId(url);
-      var code = '<iframe width="560" height="315" src="https://www.youtube.com/embed/'+id+ '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-      return code;
-    },
-  
-    getImageTag: function(url){
-      var tag = '<img src="'+url+'" style="max-height: 400px;max-width: 400px;">';
-      return tag;
-    },
-  
-    validateMessage: function(msg){
-      // Handle invalid input
-      if (!msg || typeof msg !== 'string') {
-        return JSON.stringify({ mensaje: '' });
-      }
 
-      try {
-        var obj = JSON.parse(msg);
-  
-      if(this.is_valid_url_image(obj.mensaje)){
-        console.log("Es una imagen!")
-        obj.mensaje = this.getImageTag(obj.mensaje);
+    is_valid_url_image: function (value) {
+      var url = this.parseMediaUrl(value);
+      return !!url && /\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(url.pathname);
+    },
+
+    is_valid_url_video: function (value) {
+      var url = this.parseMediaUrl(value);
+      return !!url && /\.(mp4|webm|ogv)$/i.test(url.pathname);
+    },
+
+    is_valid_yt_video: function (value) {
+      return this.getYTVideoId(value) !== null;
+    },
+
+    getYTVideoId: function (value) {
+      var url = this.parseMediaUrl(value);
+      if (!url) return null;
+      var id = null;
+      if (url.hostname === 'youtu.be') {
+        id = url.pathname.slice(1);
+      } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) {
+        if (url.pathname === '/watch') {
+          id = url.searchParams.get('v');
+        } else {
+          var match = url.pathname.match(/^\/(?:embed|shorts|v)\/([^/]+)\/?$/);
+          if (match) id = match[1];
+        }
       }
-      else if(this.is_valid_yt_video(obj.mensaje)){
-        console.log("Es un video!")
-        obj.mensaje = this.getEmbeddedCode(obj.mensaje);
+      return /^[\w-]{11}$/.test(id || '') ? id : null;
+    },
+
+    validateMessage: function (msg) {
+      var obj = {};
+      if (typeof msg === 'string') {
+        try {
+          var parsed = JSON.parse(msg);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) obj = parsed;
+        } catch (e) {
+          obj = { mensaje: msg };
+        }
       }
-      else{
-        console.log("Es un texto!")
+      var text = typeof obj.mensaje === 'string' ? obj.mensaje : '';
+      var media = null;
+      if (this.is_valid_url_image(text)) {
+        media = { tipo: 'imagen', url: text.trim() };
+      } else if (this.is_valid_url_video(text)) {
+        media = { tipo: 'video', url: text.trim() };
+      } else if (this.is_valid_yt_video(text)) {
+        media = { tipo: 'youtube', url: 'https://www.youtube.com/embed/' + this.getYTVideoId(text) };
       }
-      
-      return JSON.stringify(obj);
-      } catch (e) {
-        console.log('Error processing message:', e);
-        return JSON.stringify({ mensaje: msg }); // Return original message on error
-      }
+      return JSON.stringify({
+        nombre: typeof obj.nombre === 'string' && obj.nombre.trim() ? obj.nombre : 'Anonimo',
+        color: typeof obj.color === 'string' && /^#[0-9a-f]{6}$/i.test(obj.color) ? obj.color : '#333333',
+        mensaje: text,
+        media: media
+      });
     }
-  
-  
-  
-    
-    
-  
-  // fin del modulo
-  };
-  
+};
+
