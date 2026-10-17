@@ -1,10 +1,7 @@
 var validation = require('./unalib');
 
 function isGoogleLink(url) {
-  if (!url || url.protocol !== 'https:' || url.port || url.username || url.password) return false;
-  if (url.hostname === 'share.google') return /^\/[a-z0-9_-]+$/i.test(url.pathname);
-  return ['google.com', 'www.google.com'].includes(url.hostname) &&
-    ['/share.google', '/imgres'].includes(url.pathname);
+  return !!url && validation.is_valid_google_media_url(url.href);
 }
 
 function mediaFor(url) {
@@ -42,13 +39,14 @@ async function resolveGoogleUrl(text, fetchUrl = fetch) {
 
 async function resolveMessage(msg, fetchUrl = fetch) {
   var result = JSON.parse(validation.validateMessage(msg));
+  if (result.error) return JSON.stringify(result);
   var url = validation.parseMediaUrl(result.mensaje);
   if (!result.media && isGoogleLink(url)) {
     var resolved = await resolveGoogleUrl(result.mensaje, fetchUrl);
     if (resolved) result.media = mediaFor(resolved);
     if (!result.media) {
-      result.enlace = url.href;
-      result.aviso = 'No se pudo obtener la imagen del enlace de Google. Abra la imagen original y use «Copiar dirección de imagen».';
+      result.mensaje = '';
+      result.error = 'No se pudo obtener una imagen o video válido. Abra el contenido original y use «Copiar dirección de imagen» o el enlace del video.';
     }
   }
   return JSON.stringify(result);

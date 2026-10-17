@@ -70,14 +70,14 @@ describe('Enlaces compartidos de Google', function () {
   });
 
   [new Error('Network error'), { status: 404, headers: new Headers() }].forEach(function (response) {
-    it('conserva el mensaje cuando Google falla: ' + response, async function () {
+    it('rechaza el mensaje cuando Google no resuelve a multimedia: ' + response, async function () {
       var result = JSON.parse(await resolver.resolveMessage(JSON.stringify({mensaje: shared}), async function () {
         if (response instanceof Error) throw response;
         return response;
       }));
-      assert.strictEqual(result.mensaje, shared);
+      assert.strictEqual(result.mensaje, '');
       assert.strictEqual(result.media, null);
-      assert.ok(result.aviso.includes('Copiar dirección de imagen'));
+      assert.ok(result.error.includes('Copiar dirección de imagen'));
     });
   });
 

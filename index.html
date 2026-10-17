@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat Socket.IO UNA</title>
-    <style>
+    <style nonce="__CSP_NONCE__">
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       form { display: flex; gap: 4px; background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
@@ -20,16 +20,18 @@
       #messages li { overflow-wrap: anywhere; white-space: pre-wrap; }
       #messages img, #messages video { display: block; max-width: 100%; max-height: 400px; margin-top: 8px; }
       #messages iframe { display: block; width: 560px; max-width: 100%; height: 315px; border: 0; margin-top: 8px; }
+      #chat-error { position: fixed; bottom: 44px; left: 0; right: 0; padding: 10px; background: #fff0f0; color: #9b1c1c; border-top: 1px solid #9b1c1c; }
     </style>
   </head>
   <body>
     <ul id="messages"></ul>
+    <p id="chat-error" role="alert" hidden></p>
     <form action="">
-      <input id="nombre" autocomplete="off" placeholder="Username" aria-label="Nombre"/>
-      <input id="m" autocomplete="off" placeholder="Escriba un mensaje o pegue una URL" aria-label="Mensaje o URL" /><button>Send</button>
+      <input id="nombre" autocomplete="off" maxlength="60" placeholder="Username" aria-label="Nombre"/>
+      <input id="m" autocomplete="off" maxlength="4000" placeholder="Escriba un mensaje o pegue una URL" aria-label="Mensaje o URL" /><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
+    <script nonce="__CSP_NONCE__">
 
     var colorHexTxt = "";
 
@@ -47,11 +49,17 @@
       document.addEventListener('DOMContentLoaded', function () {
         var socket = io();
         var input = document.getElementById('m');
+        var errorMessage = document.getElementById('chat-error');
+        socket.on('Error-Mensaje', function (error) {
+          errorMessage.textContent = error;
+          errorMessage.hidden = false;
+        });
 
         // emite evento al servidor
         
         document.querySelector('form').addEventListener('submit', function(event){
             event.preventDefault();
+            errorMessage.hidden = true;
             var nombreTxt = document.getElementById('nombre').value || "Anonimo";
             var mensajeTxt = input.value;
             if (!mensajeTxt.trim()) return;
@@ -108,17 +116,7 @@
                 item.append(element);
               }
             } else {
-              if (msgJson.enlace) {
-                var sharedLink = document.createElement('a');
-                sharedLink.href = msgJson.enlace;
-                sharedLink.textContent = 'Abrir enlace';
-                sharedLink.target = '_blank';
-                sharedLink.rel = 'noopener noreferrer';
-                item.append(sharedLink);
-              } else {
-                item.append(document.createTextNode(msgJson.mensaje));
-              }
-              if (msgJson.aviso) item.append(document.createTextNode(' ' + msgJson.aviso));
+              item.append(document.createTextNode(msgJson.mensaje));
             }
             document.getElementById('messages').append(item);
             window.scrollTo(0, document.body.scrollHeight);

@@ -39,7 +39,7 @@ describe('URLs multimedia del chat', function () {
   });
 
   [
-    'hola', 'https://example.com', 'https://example.com/foto.jpg.exe',
+    'https://example.com', 'https://example.com/foto.jpg.exe',
     'https://example.com/?file=foto.jpg', 'javascript:alert(1)',
     'data:image/png;base64,abc', 'ftp://example.com/foto.jpg',
     'https://youtube.com.evil.test/watch?v=qYwlqx-JLok',
@@ -47,9 +47,10 @@ describe('URLs multimedia del chat', function () {
     'https://example.com/foto.png" onerror="alert(1)',
     '<img src=x onerror=alert(1)>'
   ].forEach(function (text) {
-    it('conserva como texto: ' + text, function () {
+    it('rechaza URL no compatible o contenido malicioso: ' + text, function () {
       var result = message(text);
-      assert.strictEqual(result.mensaje, text);
+      assert.ok(result.error);
+      assert.strictEqual(result.mensaje, '');
       assert.strictEqual(result.media, null);
     });
   });
@@ -60,9 +61,10 @@ describe('URLs multimedia del chat', function () {
     }).media, null);
   });
 
-  it('conserva nombre y color sin interpretar HTML', function () {
-    var result = message('<script>alert(1)</script>', { nombre: '<b>Billy</b>' });
-    assert.strictEqual(result.nombre, '<b>Billy</b>');
+  it('conserva nombre, texto y color validos', function () {
+    var result = message('hola', { nombre: 'Billy' });
+    assert.strictEqual(result.nombre, 'Billy');
+    assert.strictEqual(result.mensaje, 'hola');
     assert.strictEqual(result.color, '#123ABC');
   });
 
