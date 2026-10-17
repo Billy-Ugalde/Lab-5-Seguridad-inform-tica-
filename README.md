@@ -24,7 +24,7 @@ Pegar una URL completa en el campo del mensaje y presionar Send:
 
 Se aceptan parametros y fragmentos despues de la extension. Enviar la URL como mensaje completo, sin texto adicional. Otros mensajes se muestran como texto, sin interpretar HTML.
 
-El archivo debe ser publico y permitir su carga desde otros sitios. La reproduccion depende del formato compatible con el navegador; YouTube puede impedir la insercion de algunos videos. El enlace original queda disponible para abrir el contenido cuando no carga.
+El chat muestra el nombre y la imagen o el reproductor, sin mostrar la URL enviada. El archivo debe ser publico y permitir su carga desde otros sitios. La reproduccion depende del formato compatible con el navegador; YouTube puede impedir la insercion de algunos videos. Si falla la carga de una imagen o un video directo, aparece un enlace «Abrir contenido», sin mostrar la URL completa.
 
 Para comprobar la entrega en tiempo real, abrir dos pestanas del chat y enviar una URL desde una de ellas.
 

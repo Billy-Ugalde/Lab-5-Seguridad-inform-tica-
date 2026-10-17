@@ -76,13 +76,6 @@
             var media = msgJson.media;
             if (media) {
               // El servidor valida las URLs. Nunca insertar HTML del usuario.
-              var link = document.createElement('a');
-              link.href = media.url;
-              link.textContent = msgJson.mensaje;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              item.append(link);
-
               var element;
               if (media.tipo === 'imagen') {
                 element = document.createElement('img');
@@ -105,7 +98,12 @@
                 });
                 element.addEventListener('error', function () {
                   element.remove();
-                  item.append(document.createTextNode(' No se pudo cargar el contenido. Abra el enlace.'));
+                  var link = document.createElement('a');
+                  link.href = media.url;
+                  link.textContent = 'Abrir contenido';
+                  link.target = '_blank';
+                  link.rel = 'noopener noreferrer';
+                  item.append(document.createTextNode(' No se pudo cargar el contenido. '), link);
                 });
                 item.append(element);
               }
@@ -113,7 +111,7 @@
               if (msgJson.enlace) {
                 var sharedLink = document.createElement('a');
                 sharedLink.href = msgJson.enlace;
-                sharedLink.textContent = msgJson.mensaje;
+                sharedLink.textContent = 'Abrir enlace';
                 sharedLink.target = '_blank';
                 sharedLink.rel = 'noopener noreferrer';
                 item.append(sharedLink);
