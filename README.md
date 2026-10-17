@@ -47,9 +47,25 @@ La validacion comprueba el formato de las URLs, no certifica los bytes, la dispo
 
 ## Pruebas
 
+Instalar primero las dependencias de desarrollo con `npm.cmd install`.
+
 ```powershell
 npm.cmd test
+npm.cmd run test:unit
+npm.cmd run test:integration
 ```
+
+`test` ejecuta toda la suite; `test:unit` ejecuta las pruebas unitarias y `test:integration` ejecuta las pruebas del servidor con Socket.IO real.
+
+Los tres escenarios de la consigna estan cubiertos en:
+
+| Escenario | Validacion unitaria | Presentacion en la interfaz |
+| --- | --- | --- |
+| URLs de imagenes | `test/media.test.js` | `test/rendering.test.js`: crea `img`, conserva `src` y no muestra la URL |
+| URLs de videos | `test/media.test.js` | `test/rendering.test.js`: crea `video` con controles o `iframe` de YouTube |
+| Inyeccion de scripts | `test/security.test.js` | `test/rendering.test.js`: muestra el rechazo sin agregar el payload al chat |
+
+Las pruebas de interfaz usan jsdom como dependencia de desarrollo y un socket simulado. Ejecutan el script real de `index.html`, sin descargar recursos ni ejecutar payloads. Comprueban el DOM y simulan errores de carga; no descargan imagenes ni reproducen videos reales. Para ejecutar solo estos tres grupos: `npm.cmd run test:unit -- --grep "Pruebas unitarias de la interfaz"`.
 
 Las pruebas cubren intentos XSS en ambos inputs, HTML codificado, URLs no permitidas, tipos y longitudes invalidas, metadatos falsificados y redirecciones de Google. Las pruebas de integracion envian paquetes Socket.IO reales para comprobar que un rechazo llega solo al remitente, y verifican las cabeceras CSP. Tambien se comprobo en Chrome con dos pestanas la carga de imagenes, reproduccion WebM y la visualizacion de errores privados.
 

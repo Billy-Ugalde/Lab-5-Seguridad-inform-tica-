@@ -6,6 +6,11 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "mocha"
+    "test": "mocha",
+    "test:unit": "mocha --exclude test/security-integration.test.js",
+    "test:integration": "mocha test/security-integration.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
   }
 }
