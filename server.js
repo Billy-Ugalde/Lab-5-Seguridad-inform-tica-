@@ -2,7 +2,7 @@
 // npm install para descargar los paquetes...
 
 // libreriuas
-var validation = require('./libs/unalib');
+var googleMedia = require('./libs/google-media');
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -16,9 +16,9 @@ app.get('/', function(req, res){
 // escuchar una conexion por socket
 io.on('connection', function(socket){
   // si se escucha "chat message"
-  socket.on('Evento-Mensaje-Server', function(msg){
+  socket.on('Evento-Mensaje-Server', async function(msg){
 
-    msg =  validation.validateMessage(msg);
+    msg = await googleMedia.resolveMessage(msg);
     // volvemos a emitir el mismo mensaje
     io.emit('Evento-Mensaje-Server', msg);
   });

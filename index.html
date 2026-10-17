@@ -110,7 +110,17 @@
                 item.append(element);
               }
             } else {
-              item.append(document.createTextNode(msgJson.mensaje));
+              if (msgJson.enlace) {
+                var sharedLink = document.createElement('a');
+                sharedLink.href = msgJson.enlace;
+                sharedLink.textContent = msgJson.mensaje;
+                sharedLink.target = '_blank';
+                sharedLink.rel = 'noopener noreferrer';
+                item.append(sharedLink);
+              } else {
+                item.append(document.createTextNode(msgJson.mensaje));
+              }
+              if (msgJson.aviso) item.append(document.createTextNode(' ' + msgJson.aviso));
             }
             document.getElementById('messages').append(item);
             window.scrollTo(0, document.body.scrollHeight);
