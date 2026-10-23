@@ -3,13 +3,15 @@
 
 // libreriuas
 var googleMedia = require('./libs/google-media');
-var app = require('express')();
+var express = require('express');
+var app = express();
 var crypto = require('crypto');
 var chatHtml = require('fs').readFileSync(__dirname + '/index.html', 'utf8');
 var http = require('http').Server(app);
 var io = require('socket.io')(http, { maxHttpBufferSize: 64 * 1024 });
 var port = process.env.PORT || 3000;
 app.disable('x-powered-by');
+app.use(express.json());
 
 // root: presentar html
 app.get('/', function(req, res){
@@ -22,6 +24,22 @@ app.get('/', function(req, res){
     'Referrer-Policy': 'strict-origin-when-cross-origin'
   });
   res.type('html').send(chatHtml.replaceAll('__CSP_NONCE__', nonce));
+});
+
+// endpoint HTTP para envio de mensajes
+app.post('/mensaje', async function(req, res){
+  try {
+    var raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    var msg = await googleMedia.resolveMessage(raw);
+    var result = JSON.parse(msg);
+    if (result.error) {
+      return res.status(400).json(result);
+    }
+    io.emit('Evento-Mensaje-Server', msg);
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({ error: 'No se pudo procesar el mensaje.' });
+  }
 });
 
 // escuchar una conexion por socket
@@ -50,4 +68,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { http: http, io: io };
+module.exports = { http: http, io: io, app: app };

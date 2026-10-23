@@ -87,6 +87,10 @@ module.exports = {
       return /^[\w-]{11}$/.test(id || '') ? id : null;
     },
 
+    validarMensaje: function (msg) {
+      return this.validateMessage(msg);
+    },
+
     validateMessage: function (msg) {
       if (typeof msg !== 'string' || msg.length > 16384) return invalidMessage('Formato de mensaje no válido.');
       var obj;
