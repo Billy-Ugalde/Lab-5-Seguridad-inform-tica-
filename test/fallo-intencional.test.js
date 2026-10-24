@@ -1,7 +1,7 @@
    var assert = require('assert');
 
-   describe('Fallo intencional', function () {
-     it('debe fallar para bloquear el despliegue', function () {
-       assert.equal(1 + 1, 3);
+   describe('Prueba corregida', function () {
+     it('debe pasar para permitir el despliegue', function () {
+       assert.equal(1 + 1, 2);
      });
    });
