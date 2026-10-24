@@ -4,11 +4,13 @@
     "mocha": "^10.2.0",
     "socket.io": "*"
   },
-  "scripts": {
+    "scripts": {
     "start": "node server.js",
     "test": "mocha",
     "test:unit": "mocha --exclude test/security-integration.test.js",
-    "test:integration": "mocha test/security-integration.test.js"
+    "test:integration": "mocha test/security-integration.test.js",
+    "test:jest": "jest tests/integration --runInBand --env=node",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
