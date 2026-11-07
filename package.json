@@ -2,9 +2,10 @@
   "dependencies": {
     "express": "*",
     "mocha": "^10.2.0",
+    "pg": "^8.23.1",
     "socket.io": "*"
   },
-    "scripts": {
+  "scripts": {
     "start": "node server.js",
     "test": "mocha",
     "test:unit": "mocha --exclude test/security-integration.test.js",

@@ -24,6 +24,9 @@
     </style>
   </head>
   <body>
+    <div id="auth-bar" hidden style="justify-content:flex-end;gap:8px;padding:6px 10px;background:#f4f4f4">
+      <span id="auth-name"></span><a href="/auth/logout"><button type="button">Cerrar sesión</button></a>
+    </div>
     <ul id="messages"></ul>
     <p id="chat-error" role="alert" hidden></p>
     <form action="">
@@ -47,6 +50,12 @@
      }
 
       document.addEventListener('DOMContentLoaded', function () {
+        if (typeof fetch === 'function') fetch('/auth/me').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+          if (!d || !d.user) return;
+          document.getElementById('auth-name').textContent = d.user.name || '';
+          var bar = document.getElementById("auth-bar"); bar.hidden = false; bar.style.display = "flex";
+          document.getElementById('nombre').value = (d.user.name || '').slice(0, 60);
+        });
         var socket = io();
         var input = document.getElementById('m');
         var errorMessage = document.getElementById('chat-error');
